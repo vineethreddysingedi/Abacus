@@ -1,0 +1,567 @@
+{
+  "configurations": [
+    {
+      "core-site": {
+        "properties": {
+          "fs.defaultFS": "hdfs://mycluster",
+          "ha.zookeeper.quorum": "%HOSTGROUP::master_1%:2181,%HOSTGROUP::master_2%:2181,%HOSTGROUP::master_3%:2181"
+        }
+      }
+    },
+    {
+      "hdfs-site": {
+        "properties": {
+          "dfs.client.failover.proxy.provider.mycluster": "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider",
+          "dfs.ha.automatic-failover.enabled": "true",
+          "dfs.ha.fencing.methods": "shell(/bin/true)",
+          "dfs.ha.namenodes.mycluster": "nn1,nn2",
+          "dfs.namenode.http-address": "%HOSTGROUP::master_1%:50070",
+          "dfs.namenode.http-address.mycluster.nn1": "%HOSTGROUP::master_1%:50070",
+          "dfs.namenode.http-address.mycluster.nn2": "%HOSTGROUP::master_2%:50070",
+          "dfs.namenode.https-address": "%HOSTGROUP::master_1%:50470",
+          "dfs.namenode.https-address.mycluster.nn1": "%HOSTGROUP::master_1%:50470",
+          "dfs.namenode.https-address.mycluster.nn2": "%HOSTGROUP::master_2%:50470",
+          "dfs.namenode.rpc-address.mycluster.nn1": "%HOSTGROUP::master_1%:8020",
+          "dfs.namenode.rpc-address.mycluster.nn2": "%HOSTGROUP::master_2%:8020",
+          "dfs.namenode.shared.edits.dir": "qjournal://%HOSTGROUP::master_1%:8485;%HOSTGROUP::master_2%:8485;%HOSTGROUP::master_3%:8485/mycluster",
+          "dfs.nameservices": "mycluster"
+        }
+      }
+    },
+    {
+      "kerberos-env": {
+        "properties_attributes": {},
+        "properties": {
+          "realm": "ABACUS.COM",
+          "kdc_type": "mit-kdc",
+          "kdc_hosts": "ip-172-31-44-109.ec2.internal",
+          "admin_server_host": "ip-172-31-44-109.ec2.internal"
+        }
+      }
+    },
+    {
+      "krb5-conf": {
+        "properties_attributes": {},
+        "properties": {
+          "manage_krb5_conf": "true",
+          "conf_dir": "/etc",
+          "domains": "ABACUS.COM",
+          "content": "[libdefaults]\n  renew_lifetime = 7d\n  udp_preference_limit = 1\n  forwardable = true\n  default_realm = {{realm}}\n  ticket_lifetime = 24h\n  dns_lookup_realm = false\n  dns_lookup_kdc = false\n  default_ccache_name = /tmp/krb5cc_%{uid}\n  #default_tgs_enctypes = {{encryption_types}}\n  #default_tkt_enctypes = {{encryption_types}}\n{% if domains %}\n[domain_realm]\n{%- for domain in domains.split(',') %}\n  {{domain|trim()}} = {{realm}}\n{%- endfor %}\n{% endif %}\n[logging]\n  default = FILE:/var/log/krb5kdc.log\n  admin_server = FILE:/var/log/kadmind.log\n  kdc = FILE:/var/log/krb5kdc.log\n\n[realms]\n  {{realm}} = {\n{%- if master_kdc %}\n    master_kdc = {{master_kdc|trim()}}\n{%- endif -%}\n{%- if kdc_hosts > 0 -%}\n{%- set kdc_host_list = kdc_hosts.split(',')  -%}\n{%- if kdc_host_list and kdc_host_list|length > 0 %}\n    admin_server = {{admin_server_host|default(kdc_host_list[0]|trim(), True)}}\n{%- if kdc_host_list -%}\n{%- if master_kdc and (master_kdc not in kdc_host_list) %}\n    kdc = {{master_kdc|trim()}}\n{%- endif -%}\n{% for kdc_host in kdc_host_list %}\n    kdc = {{kdc_host|trim()}}\n{%- endfor -%}\n{% endif %}\n{%- endif %}\n{%- endif %}\n  }\n\n{# Append additional realm declarations below #}"
+        }
+      }
+    },
+    {
+      "admin-properties": {
+        "properties_attributes": {},
+        "properties": {
+          "DB_FLAVOR": "MYSQL",
+          "audit_db_name": "rangeraudit",
+          "audit_db_user": "rangerlogger",
+          "db_root_user": "root",
+          "db_root_password": "root",
+          "db_name": "ranger",
+          "policymgr_external_url": "http://ec2-18-232-132-120.compute-1.amazonaws.com:6080",
+          "db_user": "rangerdba",
+          "db_password": "rangerdba",
+          "SQL_CONNECTOR_JAR": "/usr/share/java/mysql-connector-java.jar",
+          "db_host": "ip-172-31-44-109.ec2.internal:3306"
+        }
+      }
+    },
+    {
+      "ranger-admin-site": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.jpa.jdbc.url": "jdbc:mysql://ip-172-31-44-109.ec2.internal:3306/ranger",
+          "ranger.ldap.bind.dn": "{{ranger_ug_ldap_bind_dn}}",
+          "ranger.ldap.url": "{{ranger_ug_ldap_url}}",
+          "ranger.externalurl": "{{ranger_external_url}}",
+          "ranger.jpa.audit.jdbc.credential.alias": "rangeraudit",
+          "ranger.jpa.jdbc.user": "{{ranger_db_user}}",
+          "ranger.jpa.audit.jdbc.url": "{{audit_jdbc_url}}",
+          "ranger.ldap.base.dn": "dc=example,dc=com",
+          "ranger.ldap.group.roleattribute": "cn",
+          "ranger.unixauth.remote.login.enabled": "true",
+          "ranger.authentication.method": "LDAP",
+          "ranger.ldap.user.dnpattern": "uid={0},ou=users,dc=xasecure,dc=net",
+          "ranger.ldap.group.searchfilter": "{{ranger_ug_ldap_group_searchfilter}}",
+          "ranger.ldap.group.searchbase": "{{ranger_ug_ldap_group_searchbase}}",
+          "ranger.spnego.kerberos.keytab": "/etc/security/keytabs/spnego.service.keytab",
+          "ranger.jpa.audit.jdbc.user": "{{ranger_audit_db_user}}",
+          "ranger.service.host": "{{ranger_host}}",
+          "ranger.service.http.port": "6080",
+          "ranger.jpa.jdbc.driver": "com.mysql.jdbc.Driver"
+        }
+      }
+    },
+    {
+      "ranger-ugsync-site": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.usersync.impl.class": "LDAP/AD",
+          "ranger.usersync.ldap.deltasync": "true",
+          "ranger.usersync.ldap.url": "ldap://opendj.default.scratchpad.abacusinsights.com:1389",
+          "ranger.usersync.ldap.user.nameattribute": "uid",
+          "ranger.usersync.ldap.user.searchbase": "dc=openam,dc=forgerock,dc=org",
+          "ranger.usersync.ldap.searchBase": "dc=hadoop,dc=apache,dc=org",
+          "ranger.usersync.enabled": "true",
+          "ranger.usersync.ldap.binddn": "cn=Directory Manager",
+          "ranger.usersync.ldapbindpassword": "password"
+        }
+      }
+    },
+    {
+      "ranger-env": {
+        "properties_attributes": {},
+        "properties": {
+          "xml_configurations_supported": "true",
+          "ranger_user": "ranger",
+          "xasecure.audit.destination.hdfs.dir": "hdfs://%HOSTGROUP::master_2%:8020/ranger/audit",
+          "create_db_dbuser": "true",
+          "ranger-hdfs-plugin-enabled": "Yes",
+          "ranger_privelege_user_jdbc_url": "jdbc:mysql://ip-172-31-44-109.ec2.internal:3306",
+          "ranger-knox-plugin-enabled": "Yes",
+          "is_solrCloud_enabled": "false",
+          "bind_anonymous": "false",
+          "ranger-yarn-plugin-enabled": "Yes",
+          "ranger-kafka-plugin-enabled": "Yes",
+          "xasecure.audit.destination.hdfs": "true",
+          "ranger-hive-plugin-enabled": "Yes",
+          "xasecure.audit.destination.solr": "false",
+          "xasecure.audit.destination.db": "true",
+          "ranger_group": "ranger",
+          "ranger_admin_username": "amb_ranger_admin",
+          "ranger_admin_password": "amb_ranger_admin",
+          "ranger-hbase-plugin-enabled": "Yes",
+          "admin_username": "admin"
+        }
+      }
+    },
+    {
+      "ranger-hdfs-plugin-properties": {
+        "properties_attributes": {},
+        "properties": {
+          "REPOSITORY_CONFIG_USERNAME": "hadoop",
+          "ranger-hdfs-plugin-enabled": "Yes",
+          "common.name.for.certificate": "",
+          "policy_user": "ambari-qa",
+          "hadoop.rpc.protection": ""
+        }
+      }
+    },
+    {
+      "ranger-hive-plugin-properties": {
+        "properties_attributes": {},
+        "properties": {
+          "REPOSITORY_CONFIG_USERNAME": "hive",
+          "ranger-hive-plugin-enabled": "Yes",
+          "common.name.for.certificate": "",
+          "policy_user": "ambari-qa",
+          "hadoop.rpc.protection": ""
+        }
+      }
+    },
+    {
+      "ranger-hdfs-security": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.plugin.hdfs.policy.rest.url": "http://ec2-18-232-132-120.compute-1.amazonaws.com:6080"
+        }
+      }
+    },
+    {
+      "ranger-hive-security": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.plugin.hive.policy.rest.url": "http://ec2-18-232-132-120.compute-1.amazonaws.com:6080"
+        }
+      }
+    },
+    {
+      "ranger-kafka-security": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.plugin.kafka.policy.rest.url": "http://ec2-18-232-132-120.compute-1.amazonaws.com:6080"
+        }
+      }
+    },
+    {
+      "ranger-yarn-security": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.plugin.yarn.policy.rest.url": "http://ec2-18-232-132-120.compute-1.amazonaws.com:6080"
+        }
+      }
+    },
+    {
+      "ranger-yarn-plugin-properties": {
+        "properties_attributes": {},
+        "properties": {
+          "REPOSITORY_CONFIG_USERNAME": "yarn",
+          "common.name.for.certificate": "",
+          "ranger-yarn-plugin-enabled": "Yes",
+          "policy_user": "ambari-qa",
+          "hadoop.rpc.protection": ""
+        }
+      }
+    },
+    {
+      "ranger-kafka-plugin-properties": {
+        "properties_attributes": {},
+        "properties": {
+          "REPOSITORY_CONFIG_USERNAME": "kafka",
+          "ranger-kafka-plugin-enabled": "Yes",
+          "common.name.for.certificate": "",
+          "policy_user": "ambari-qa",
+          "hadoop.rpc.protection": ""
+        }
+      }
+    }
+  ],
+  "host_groups": [
+    {
+      "components": [
+        {
+          "name": "NAMENODE"
+        },
+        {
+          "name": "ZKFC"
+        },
+        {
+          "name": "JOURNALNODE"
+        },
+        {
+          "name": "ZOOKEEPER_SERVER"
+        },
+        {
+          "name": "HST_AGENT"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        }
+      ],
+      "configurations": [],
+      "name": "master_1",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "HST_AGENT"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "ZOOKEEPER_SERVER"
+        },
+        {
+          "name": "NAMENODE"
+        },
+        {
+          "name": "ZKFC"
+        },
+        {
+          "name": "JOURNALNODE"
+        }
+      ],
+      "configurations": [],
+      "name": "master_2",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "RESOURCEMANAGER"
+        },
+        {
+          "name": "HISTORYSERVER"
+        },
+        {
+          "name": "ZOOKEEPER_SERVER"
+        },
+        {
+          "name": "JOURNALNODE"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "HST_AGENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        }
+      ],
+      "configurations": [],
+      "name": "master_3",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "HIVE_METASTORE"
+        },
+        {
+          "name": "HIVE_SERVER"
+        },
+        {
+          "name": "MYSQL_SERVER"
+        },
+        {
+          "name": "WEBHCAT_SERVER"
+        },
+        {
+          "name": "HST_AGENT"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "SLIDER"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        }
+      ],
+      "configurations": [],
+      "name": "master_4",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "AMBARI_SERVER"
+        },
+        {
+          "name": "RANGER_TAGSYNC"
+        },
+        {
+          "name": "RANGER_ADMIN"
+        },
+        {
+          "name": "RANGER_USERSYNC"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "ACTIVITY_EXPLORER"
+        },
+        {
+          "name": "HST_AGENT"
+        },
+        {
+          "name": "HST_SERVER"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "ACTIVITY_ANALYZER"
+        }
+      ],
+      "configurations": [],
+      "name": "ranger_server",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "KAFKA_BROKER"
+        },
+        {
+          "name": "METRICS_COLLECTOR"
+        },
+        {
+          "name": "METRICS_GRAFANA"
+        },
+        {
+          "name": "SPARK_JOBHISTORYSERVER"
+        },
+        {
+          "name": "APP_TIMELINE_SERVER"
+        },
+        {
+          "name": "ZEPPELIN_MASTER"
+        },
+        {
+          "name": "SQOOP"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "HST_AGENT"
+        },
+        {
+          "name": "KNOX_GATEWAY"
+        }
+      ],
+      "configurations": [],
+      "name": "utility_node_1",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "DATANODE"
+        },
+        {
+          "name": "NODEMANAGER"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "YARN_CLIENT"
+        },
+        {
+          "name": "MAPREDUCE2_CLIENT"
+        },
+        {
+          "name": "SPARK_CLIENT"
+        },
+        {
+          "name": "HDFS_CLIENT"
+        },
+        {
+          "name": "TEZ_CLIENT"
+        },
+        {
+          "name": "HIVE_CLIENT"
+        },
+        {
+          "name": "PIG"
+        },
+        {
+          "name": "HCAT"
+        },
+        {
+          "name": "SLIDER"
+        },
+        {
+          "name": "HST_AGENT"
+        }
+      ],
+      "configurations": [],
+      "name": "datanode_1",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "DATANODE"
+        },
+        {
+          "name": "NODEMANAGER"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "HST_AGENT"
+        }
+      ],
+      "configurations": [],
+      "name": "datanode_2",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "DATANODE"
+        },
+        {
+          "name": "NODEMANAGER"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "HST_AGENT"
+        }
+      ],
+      "configurations": [],
+      "name": "datanode_3",
+      "cardinality": "1"
+    },
+    {
+      "components": [
+        {
+          "name": "DATANODE"
+        },
+        {
+          "name": "NODEMANAGER"
+        },
+        {
+          "name": "KERBEROS_CLIENT"
+        },
+        {
+          "name": "METRICS_MONITOR"
+        },
+        {
+          "name": "HST_AGENT"
+        }
+      ],
+      "configurations": [],
+      "name": "datanode_4",
+      "cardinality": "1"
+    }
+  ],
+  "settings": [
+    {
+      "recovery_settings": [
+        {
+          "recovery_enabled": "true"
+        }
+      ]
+    },
+    {
+      "service_settings": [
+        {
+          "name": "HIVE",
+          "credential_store_enabled": "true"
+        },
+        {
+          "recovery_enabled": "true",
+          "name": "AMBARI_METRICS"
+        }
+      ]
+    },
+    {
+      "component_settings": [
+        {
+          "recovery_enabled": "true",
+          "name": "METRICS_COLLECTOR"
+        }
+      ]
+    }
+  ],
+  "Blueprints": {
+    "blueprint_name": "blueprint-c29",
+    "stack_name": "HDP",
+    "stack_version": "2.6",
+    "security": {
+      "type": "KERBEROS"
+    }
+  }
+}

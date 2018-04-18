@@ -1,0 +1,86 @@
+
+
+For blueprint with Ranger service to work please follow the below steps
+
+1) After ambari-server installed run the below command on the ambari-server
+
+sudo ambari-server setup --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
+
+2) commands to run on Mysql
+
+create database ranger;
+
+CREATE USER 'rangerdba'@'localhost' IDENTIFIED BY 'rangerdba';
+
+GRANT ALL PRIVILEGES ON *.* TO 'rangerdba'@'ip-172-31-44-109.ec2.internal' IDENTIFIED BY 'rangerdba';
+
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('root');
+
+SET PASSWORD FOR 'root'@'ip-172-31-44-109.ec2.internal' = PASSWORD('root');
+
+flush privileges;
+
+3) In the bluprint.json file make the below changes
+
+under "admin-properties"
+    
+   "db_root_user": "root",
+   "db_root_password": "root",
+   "db_name": "ranger",
+   "db_user": "rangerdba",
+   "db_password": "rangerdba",
+   "policymgr_external_url": "http://ec2-34-228-254-33.compute-1.amazonaws.com:6080", - public ip given
+   "db_host": "ip-172-31-84-167.ec2.internal:3306" - mysql host given
+
+under "ranger-ugsync-site": {
+        "properties_attributes": {},
+        "properties": {}
+          "ranger.usersync.ldap.deltasync" : "true",
+          "ranger.usersync.ldap.url" : "ldap://opendj.default.scratchpad.abacusinsights.com:1389",
+          "ranger.usersync.ldap.user.nameattribute" : "uid",
+          "ranger.usersync.ldap.user.searchbase" : "dc=openam,dc=forgerock,dc=org",
+          "ranger.usersync.enabled" : "true",
+          "ranger.usersync.ldap.binddn" : "cn=Directory Manager",
+          "ranger.usersync.ldap.bindkeystore" : "password"
+
+
+under "ranger-admin-site":
+
+   "ranger.jpa.jdbc.url": "jdbc:mysql://ip-172-31-84-167.ec2.internal:3306/ranger", - mysql host given
+
+
+under "ranger-env":
+
+   "xasecure.audit.destination.hdfs.dir": "hdfs://ip-172-31-84-167.ec2.internal:8020/ranger/audit", - explicitly given one of the node where seconday namenode is installed.
+   "ranger_privelege_user_jdbc_url": "jdbc:mysql://ip-172-31-84-167.ec2.internal:3306", - Mysql host given
+
+ under "ranger-hdfs-security": {
+        "properties_attributes": {},
+        "properties": {}
+        "ranger.plugin.hdfs.policy.rest.url" : "http://ec2-34-203-202-173.compute-1.amazonaws.com:6080" - given Ranger public ip url
+
+
+ under "ranger-kafka-security": {
+        "properties_attributes": {},
+        "properties": {}
+        "ranger.plugin.kafka.policy.rest.url" : "http://ec2-34-203-202-173.compute-1.amazonaws.com:6080", - give ranger public ip url
+            
+under 
+      "ranger-yarn-security": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.plugin.kafka.policy.rest.url": "http://ec2-52-90-96-207.compute-1.amazonaws.com:6080"
+     
+
+under 
+
+      "ranger-hive-security": {
+        "properties_attributes": {},
+        "properties": {
+          "ranger.plugin.hive.policy.rest.url": "http://ec2-34-227-116-83.compute-1.amazonaws.com:6080"
+      
+
+
+          
+
+ 

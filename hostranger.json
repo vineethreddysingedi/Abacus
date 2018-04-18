@@ -1,0 +1,62 @@
+{ "blueprint":"blueprint-c13",
+	"default_password" : "abacus1234",
+  "host_groups":
+    [
+      { "name":"host_group_1",
+        "hosts":
+        [ 
+          { 
+            "fqdn":"ip-172-31-88-234.ec2.internal" 
+          } 
+        ] 
+      },
+      { "name":"host_group_7",
+        "hosts":
+        [ 
+          { 
+            "fqdn":"ip-172-31-90-10.ec2.internal" 
+          } 
+        ] 
+      },
+      { "name":"host_group_2",
+        "hosts":
+        [ 
+          { 
+            "fqdn":"ip-172-31-85-65.ec2.internal" 
+          } 
+        ] 
+      },
+      { "name":"host_group_3",
+        "hosts":
+        [ 
+          { 
+            "fqdn":"ip-172-31-84-167.ec2.internal" 
+          } 
+        ] 
+      },
+      { "name":"host_group_4",
+        "hosts":
+        [ 
+          { 
+            "fqdn":"ip-172-31-80-221.ec2.internal" 
+          } 
+        ] 
+      },
+      { "name":"host_group_5",
+        "hosts":
+        [ 
+          { 
+            "fqdn":"ip-172-31-93-61.ec2.internal" 
+          } 
+        ] 
+      },
+	    { "name":"host_group_6",
+        "hosts":
+        [ 
+          { 
+          "fqdn":"ip-172-31-89-249.ec2.internal" 
+          } 
+        ] 
+      }
+    ] 
+  }

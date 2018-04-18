@@ -1,0 +1,42 @@
+Pre_req for kerberos
+
+1. Make sure you have installed a kerberos on the local machine
+2. Database for kerberos with password
+3. modify the krb5.conf 
+
+Changes that needs to be made in the blueprint 
+
+
+under "kerberos-env": {
+        "properties_attributes": {},
+        "properties": {
+          "realm": "ABACUS.COM",   - change
+          "kdc_type": "mit-kdc",    
+          "kdc_hosts": "ip-172-31-94-112.ec2.internal", - change
+          "admin_server_host": "ip-172-31-94-112.ec2.internal" - change
+
+under "krb5-conf"
+
+     "domains": "ABACUS.COM", - change 
+
+
+under "Blueprints":
+
+ "security": {
+      "type": "KERBEROS"
+    }        
+
+5. changes on the Hostmapping.json file 
+
+  "credentials" : [
+     {
+       "alias" : "kdc.admin.credential",
+       "principal" : "admin/admin",
+       "key" : "hadoop",            - change 
+       "type" : "TEMPORARY"
+     }
+    ],
+    "security" : {
+        "type" : "KERBEROS"
+   },
+   "Clusters" : {"cluster_name":"abacus"}  - change 

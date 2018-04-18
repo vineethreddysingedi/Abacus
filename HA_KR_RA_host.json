@@ -1,0 +1,88 @@
+ {
+    "blueprint": "blueprint-c21",
+    "default_password": "abacus1234",
+    "host_groups": [
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-94-111.ec2.internal" }
+          ],
+          "name": "master_1",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-89-241.ec2.internal" }
+          ],
+          "name": "master_2",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-87-65.ec2.internal" }
+          ],
+          "name": "master_3",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-81-117.ec2.internal" }
+          ],
+          "name": "master_4",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-90-250.ec2.internal" }
+          ],
+          "name": "ranger_server",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-86-66.ec2.internal" }
+          ],
+          "name": "utility_node_1",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-85-63.ec2.internal" }
+          ],
+          "name": "datanodes",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-93-125.ec2.internal" }
+          ],
+          "name": "datanodes",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-82-138.ec2.internal" }
+          ],
+          "name": "datanodes",
+          "configurations" : [ ]
+        },
+        {
+          "hosts": [
+              { "fqdn": "ip-172-31-81-5.ec2.internal" }
+          ],
+          "name": "datanodes",
+          "configurations" : [ ]
+        }
+    ],
+    "credentials" : [
+     {
+       "alias" : "kdc.admin.credential",
+       "principal" : "admin/admin",
+       "key" : "hadoop",
+       "type" : "TEMPORARY"
+     }
+    ],
+    "security" : {
+        "type" : "KERBEROS"
+   },
+   "Clusters" : {"cluster_name":"abacus"}
+}
